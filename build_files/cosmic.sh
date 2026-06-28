@@ -1,19 +1,9 @@
-#!/bin/bash
+#!/usr/bin/bash
 
-set -ouex pipefail
+# shellcheck disable=SC1091
+. /ctx/common.sh
 
-# Copy the contents of system_files/ of the git repo to /
-cp -avf "/ctx/system_files"/. /
-
-### Install packages
-
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
-
-# this installs a package from fedora repos
-dnf5 install -y tmux btop just golang neovim lazygit
+set -eoux pipefail
 
 # Add Cosmic Repo
 if [[ "${IMAGE}" =~ beta ]]; then
@@ -166,52 +156,3 @@ systemctl --global enable podman-auto-update.timer
 # Hide Desktop Files. Hidden removes mime associations
 sed -i 's@\[Desktop Entry\]@\[Desktop Entry\]\nHidden=true@g' /usr/share/applications/htop.desktop
 sed -i 's@\[Desktop Entry\]@\[Desktop Entry\]\nHidden=true@g' /usr/share/applications/nvtop.desktop
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
-
-#### Example for enabling a System Unit File
-
-systemctl enable podman.socket
-# this allows mangohud to read CPU power wattage
-systemctl enable sysfs-read-powercap-intel.service
-
-dnf5 -y config-manager setopt fedora-multimedia.enabled=1
-dnf5 -y config-manager setopt "*bazzite*".priority=1
-
-STEAM_PACKAGES=(
-  dbus-x11
-  gamescope-libs.i686
-  gamescope-libs.x86_64
-  gamescope-shaders
-  gamescope.x86_64
-  gobject-introspection
-  libFAudio.i686
-  libFAudio.x86_64
-  libobs_glcapture.i686
-  libobs_glcapture.x86_64
-  libobs_vkcapture.i686
-  libobs_vkcapture.x86_64
-  lutris
-  mangohud.i686
-  mangohud.x86_64
-  steam
-  umu-launcher
-  vkBasalt.i686
-  vkBasalt.x86_64
-  xdg-user-dirs
-)
-
-dnf5 install -y --setopt=install_weak_deps=False "${STEAM_PACKAGES[@]}"
-
-dnf5 remove -y gamemode
-
-dnf5 install -y \
-  --enable-repo="copr:copr.fedorainfracloud.org:bazzite-org:bazzite" \
-  gamescope-session-plus \
-  gamescope-session-steam
-
-dnf5 -y config-manager setopt fedora-multimedia.enabled=0
