@@ -21,11 +21,6 @@ fi
 # this installs a package from fedora repos
 dnf5 install -y tmux btop just golang neovim dnf5-plugins
 
-# Add Cosmic Repo
-# if [[ "${IMAGE}" =~ beta ]]; then
-dnf5 -y copr enable ryanabx/cosmic-epoch
-# fi
-
 # Add Staging repo
 dnf5 -y copr enable ublue-os/staging
 
@@ -46,10 +41,6 @@ dnf5 install -y \
   "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
   "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 
-# Add and Enable Tailscale Repo
-dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo
-dnf5 config-manager setopt tailscale-stable.enabled=1
-
 # Add Kubernetes Repo (for kubectl)
 cat > /etc/yum.repos.d/kubernetes.repo << 'EOF'
 [kubernetes]
@@ -60,33 +51,14 @@ gpgcheck=1
 gpgkey=https://pkgs.k8s.io/core:/stable:/v1.33/rpm/repodata/repomd.xml.key
 EOF
 
-# Cosmic Packages
 PACKAGES=(
   NetworkManager-openvpn
-  cosmic-files
-  cosmic-initial-setup
-  cosmic-player
-  cosmic-session
-  cosmic-store
-  cosmic-term
   distrobox
-  fedora-release-cosmic-atomic
-  fedora-release-identity-cosmic-atomic
-  flatpak
   gdisk
   gnome-disk-utility
-  gnome-keyring
-  gnome-keyring-pam
   playerctl
-  plymouth-system-theme
-  pop-launcher
   system-config-printer
   toolbox
-  xdg-desktop-portal-gtk
-)
-
-# Bluefin Packages
-PACKAGES+=(
   adcli
   adw-gtk3-theme
   alsa-firmware
@@ -160,7 +132,6 @@ PACKAGES+=(
   kubectl
   mosh
   symlinks
-  tailscale
   topgrade
   tuned
   tuned-gtk
@@ -198,7 +169,6 @@ tar -xzf /tmp/krew.tar.gz -C /tmp
 install -c -m 0755 /tmp/krew-linux_amd64 /usr/local/bin/kubectl-krew
 
 # Systemd
-systemctl enable cosmic-greeter
 systemctl --global enable podman-auto-update.timer
 
 # Hide Desktop Files. Hidden removes mime associations
