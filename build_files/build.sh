@@ -5,6 +5,12 @@ set -ouex pipefail
 # Copy the contents of system_files/ of the git repo to /
 cp -avf "/ctx/system_files"/. /
 
+# Install sandbox proxy CA if present (needed for HTTPS in sandboxed build environments)
+if [[ -f /ctx/proxy-ca.crt ]]; then
+  cp /ctx/proxy-ca.crt /etc/pki/ca-trust/source/anchors/proxy-ca.crt
+  update-ca-trust
+fi
+
 ### Install packages
 
 # Packages can be installed from any enabled yum repo on the image.
@@ -13,12 +19,12 @@ cp -avf "/ctx/system_files"/. /
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
 
 # this installs a package from fedora repos
-dnf5 install -y tmux btop just golang neovim
+dnf5 install -y tmux btop just golang neovim dnf5-plugins
 
 # Add Cosmic Repo
-if [[ "${IMAGE}" =~ beta ]]; then
-  dnf5 -y copr enable ryanabx/cosmic-epoch
-fi
+# if [[ "${IMAGE}" =~ beta ]]; then
+dnf5 -y copr enable ryanabx/cosmic-epoch
+# fi
 
 # Add Staging repo
 dnf5 -y copr enable ublue-os/staging
@@ -29,8 +35,14 @@ dnf5 -y copr enable ublue-os/packages
 # Add Nerd Fonts Repo
 dnf5 -y copr enable che/nerd-fonts
 
-# Enable Charm/Tailscale Repos
-dnf5 config-manager setopt charm.enabled=1 tailscale-stable.enabled=1
+# Add RPMFusion (needed for steam, ffmpeg, etc.)
+dnf5 install -y \
+  "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
+  "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+
+# Add and Enable Tailscale Repo
+dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo
+dnf5 config-manager setopt tailscale-stable.enabled=1
 
 # Cosmic Packages
 PACKAGES=(
@@ -95,7 +107,7 @@ PACKAGES+=(
   igt-gpu-tools
   iwd
   krb5-workstation
-  libavcodec
+  libavcodec-free
   libcamera-gstreamer
   libcamera-tools
   libinput-utils
@@ -152,10 +164,10 @@ UNINSTALL_PACKAGES=(
 )
 
 dnf5 remove -y "${UNINSTALL_PACKAGES[@]}"
-sed -i 's@enabled=1@enabled=0@g' /etc/yum.repos.d/_copr_ublue-os-akmods.repo
+[[ -f /etc/yum.repos.d/_copr_ublue-os-akmods.repo ]] && sed -i 's@enabled=1@enabled=0@g' /etc/yum.repos.d/_copr_ublue-os-akmods.repo || true
 
 # Starship Shell Prompt
-ghcurl "https://github.com/starship/starship/releases/latest/download/starship-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/starship.tar.gz
+curl -L "https://github.com/starship/starship/releases/latest/download/starship-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/starship.tar.gz
 tar -xzf /tmp/starship.tar.gz -C /tmp
 install -c -m 0755 /tmp/starship /usr/bin
 
@@ -164,8 +176,8 @@ systemctl enable cosmic-greeter
 systemctl --global enable podman-auto-update.timer
 
 # Hide Desktop Files. Hidden removes mime associations
-sed -i 's@\[Desktop Entry\]@\[Desktop Entry\]\nHidden=true@g' /usr/share/applications/htop.desktop
-sed -i 's@\[Desktop Entry\]@\[Desktop Entry\]\nHidden=true@g' /usr/share/applications/nvtop.desktop
+[[ -f /usr/share/applications/htop.desktop ]] && sed -i 's@\[Desktop Entry\]@\[Desktop Entry\]\nHidden=true@g' /usr/share/applications/htop.desktop || true
+[[ -f /usr/share/applications/nvtop.desktop ]] && sed -i 's@\[Desktop Entry\]@\[Desktop Entry\]\nHidden=true@g' /usr/share/applications/nvtop.desktop || true
 # Use a COPR Example:
 #
 # dnf5 -y copr enable ublue-os/staging
@@ -177,24 +189,18 @@ sed -i 's@\[Desktop Entry\]@\[Desktop Entry\]\nHidden=true@g' /usr/share/applica
 
 systemctl enable podman.socket
 # this allows mangohud to read CPU power wattage
-systemctl enable sysfs-read-powercap-intel.service
+systemctl enable sysfs-read-powercap-intel.service 2>/dev/null || true
 
-dnf5 -y config-manager setopt fedora-multimedia.enabled=1
+dnf5 -y copr enable bazzite-org/bazzite
 dnf5 -y config-manager setopt "*bazzite*".priority=1
 
 STEAM_PACKAGES=(
   dbus-x11
-  gamescope-libs.i686
-  gamescope-libs.x86_64
   gamescope-shaders
   gamescope.x86_64
   gobject-introspection
   libFAudio.i686
   libFAudio.x86_64
-  libobs_glcapture.i686
-  libobs_glcapture.x86_64
-  libobs_vkcapture.i686
-  libobs_vkcapture.x86_64
   lutris
   mangohud.i686
   mangohud.x86_64
@@ -214,4 +220,3 @@ dnf5 install -y \
   gamescope-session-plus \
   gamescope-session-steam
 
-dnf5 -y config-manager setopt fedora-multimedia.enabled=0
