@@ -166,8 +166,7 @@ install -c -m 0755 /tmp/starship /usr/bin
 KREW_VERSION=$(curl -sL https://api.github.com/repos/kubernetes-sigs/krew/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
 curl -L "https://github.com/kubernetes-sigs/krew/releases/download/${KREW_VERSION}/krew-linux_amd64.tar.gz" -o /tmp/krew.tar.gz
 tar -xzf /tmp/krew.tar.gz -C /tmp
-mkdir -p /usr/local/bin
-install -c -m 0755 /tmp/krew-linux_amd64 /usr/local/bin/kubectl-krew
+install -c -m 0755 /tmp/krew-linux_amd64 /usr/bin/kubectl-krew
 
 # Systemd
 systemctl --global enable podman-auto-update.timer
