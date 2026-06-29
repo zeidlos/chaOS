@@ -50,6 +50,16 @@ dnf5 install -y \
 dnf5 config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo
 dnf5 config-manager setopt tailscale-stable.enabled=1
 
+# Add Kubernetes Repo (for kubectl)
+cat > /etc/yum.repos.d/kubernetes.repo << 'EOF'
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.33/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.33/rpm/repodata/repomd.xml.key
+EOF
+
 # Cosmic Packages
 PACKAGES=(
   NetworkManager-openvpn
@@ -146,9 +156,11 @@ PACKAGES+=(
   sssd-ad
   sssd-krb5
   sssd-nfs-idmap
+  k9s
+  kubectl
+  mosh
   symlinks
   tailscale
-  tmux
   topgrade
   tuned
   tuned-gtk
@@ -178,6 +190,12 @@ dnf5 remove -y "${UNINSTALL_PACKAGES[@]}"
 curl -L "https://github.com/starship/starship/releases/latest/download/starship-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/starship.tar.gz
 tar -xzf /tmp/starship.tar.gz -C /tmp
 install -c -m 0755 /tmp/starship /usr/bin
+
+# krew (kubectl plugin manager) — installed as kubectl-krew so `kubectl krew` works
+KREW_VERSION=$(curl -sL https://api.github.com/repos/kubernetes-sigs/krew/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+curl -L "https://github.com/kubernetes-sigs/krew/releases/download/${KREW_VERSION}/krew-linux_amd64.tar.gz" -o /tmp/krew.tar.gz
+tar -xzf /tmp/krew.tar.gz -C /tmp
+install -c -m 0755 /tmp/krew-linux_amd64 /usr/local/bin/kubectl-krew
 
 # Systemd
 systemctl enable cosmic-greeter
