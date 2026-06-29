@@ -38,6 +38,9 @@ dnf5 -y copr enable che/nerd-fonts
 # Add lazygit Repo
 dnf5 -y copr enable atim/lazygit
 
+# Add Ghostty Repo
+dnf5 -y copr enable scottames/ghostty
+
 # Add RPMFusion (needed for steam, ffmpeg, etc.)
 dnf5 install -y \
   "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
@@ -95,6 +98,7 @@ PACKAGES+=(
   flatpak-spawn
   foo2zjs
   fuse-encfs
+  ghostty
   git-credential-libsecret
   glow
   lazygit
