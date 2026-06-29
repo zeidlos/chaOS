@@ -19,7 +19,7 @@ fi
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
 
 # this installs a package from fedora repos
-dnf5 install -y tmux btop just golang neovim dnf5-plugins
+dnf5 install -y tmux btop just golang neovim lazygit dnf5-plugins
 
 # Add Cosmic Repo
 # if [[ "${IMAGE}" =~ beta ]]; then
@@ -219,4 +219,58 @@ dnf5 install -y \
   --enable-repo="copr:copr.fedorainfracloud.org:bazzite-org:bazzite" \
   gamescope-session-plus \
   gamescope-session-steam
+
+# Hyprland
+dnf5 -y copr enable solopasha/hyprland
+
+HYPRLAND_PACKAGES=(
+  # Compositor and core
+  hyprland
+  hyprland-protocols
+  uwsm
+  xdg-desktop-portal-hyprland
+
+  # Hypr ecosystem
+  hyprcursor
+  hypridle
+  hyprlock
+  hyprpaper
+  hyprpicker
+  hyprpolkitagent
+  hyprshot
+
+  # Status bar and launcher
+  waybar
+  wofi
+
+  # Notifications
+  mako
+
+  # Screenshots
+  grim
+  slurp
+  satty
+
+  # Clipboard
+  cliphist
+
+  # Wallpaper (animated)
+  swww
+
+  # GTK theming
+  nwg-look
+  qt6ct
+
+  # Terminal
+  foot
+
+  # Audio/brightness control
+  brightnessctl
+  pamixer
+
+  # Network applet
+  network-manager-applet
+)
+
+dnf5 install -y --setopt=install_weak_deps=False "${HYPRLAND_PACKAGES[@]}"
 
