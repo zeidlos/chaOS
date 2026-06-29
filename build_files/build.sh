@@ -19,7 +19,7 @@ fi
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
 
 # this installs a package from fedora repos
-dnf5 install -y tmux btop just golang neovim lazygit dnf5-plugins
+dnf5 install -y tmux btop just golang neovim dnf5-plugins
 
 # Add Cosmic Repo
 # if [[ "${IMAGE}" =~ beta ]]; then
@@ -34,6 +34,9 @@ dnf5 -y copr enable ublue-os/packages
 
 # Add Nerd Fonts Repo
 dnf5 -y copr enable che/nerd-fonts
+
+# Add lazygit Repo
+dnf5 -y copr enable atim/lazygit
 
 # Add RPMFusion (needed for steam, ffmpeg, etc.)
 dnf5 install -y \
@@ -94,6 +97,7 @@ PACKAGES+=(
   fuse-encfs
   git-credential-libsecret
   glow
+  lazygit
   gnupg2-scdaemon
   gum
   gvfs
@@ -220,17 +224,12 @@ dnf5 install -y \
   gamescope-session-plus \
   gamescope-session-steam
 
-# Hyprland
+# Hyprland ecosystem (solopasha COPR)
+# Note: hyprland itself is excluded — the COPR aquamarine dep (libdisplay-info.so.2)
+# conflicts with Fedora 44's libdisplay-info-0.3.0. Re-add once COPR rebuilds.
 dnf5 -y copr enable solopasha/hyprland
 
 HYPRLAND_PACKAGES=(
-  # Compositor and core
-  hyprland
-  hyprland-protocols
-  uwsm
-  xdg-desktop-portal-hyprland
-
-  # Hypr ecosystem
   hyprcursor
   hypridle
   hyprlock
@@ -238,37 +237,20 @@ HYPRLAND_PACKAGES=(
   hyprpicker
   hyprpolkitagent
   hyprshot
-
-  # Status bar and launcher
+  uwsm
   waybar
   wofi
-
-  # Notifications
   mako
-
-  # Screenshots
   grim
   slurp
   satty
-
-  # Clipboard
   cliphist
-
-  # Wallpaper (animated)
   swww
-
-  # GTK theming
   nwg-look
   qt6ct
-
-  # Terminal
   foot
-
-  # Audio/brightness control
   brightnessctl
   pamixer
-
-  # Network applet
   network-manager-applet
 )
 
