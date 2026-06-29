@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-chaOS is a custom [bootc](https://github.com/bootc-dev/bootc) OCI image based on `quay.io/fedora/fedora-bootc:44`. It bundles the COSMIC desktop, Steam/gaming packages, and a curated set of productivity tools. The built image is published to GHCR and can be switched to directly from any running bootc system.
+chaOS is a custom [bootc](https://github.com/bootc-dev/bootc) OCI image based on `quay.io/fedora-ostree-desktops/cosmic-atomic:44`. It bundles the COSMIC desktop, Steam/gaming packages, and a curated set of productivity tools. The built image is published to GHCR and can be switched to directly from any running bootc system.
 
 ## Key Commands
 
@@ -28,12 +28,20 @@ All `just` commands load their defaults from `image-template.env`.
 
 ### Build flow
 
+The build is split into four independent stages so that changing one script only re-runs that stage (and everything after it), not the full 3+ minute package install.
+
 ```
 Containerfile
-  ├── stage ctx   — mounts build_files/ and system_files/ without copying them into the final image
-  └── stage final — FROM fedora-bootc:44
-        ├── bind-mounts ctx at /ctx
-        ├── runs /ctx/build.sh       ← all package installs and config live here
+  ├── ctx-repos    — contains repos.sh only
+  ├── ctx-packages — contains packages.sh only
+  ├── ctx-binaries — contains binaries.sh only
+  ├── ctx-config   — contains config.sh + system_files/
+  └── stage final  — FROM cosmic-atomic:44
+        ├── ARG PROXY_CA — optional sandbox TLS proxy CA injection
+        ├── runs /ctx/repos.sh     ← enable COPRs and external repos
+        ├── runs /ctx/packages.sh  ← single merged dnf5 install + COPR disable
+        ├── runs /ctx/binaries.sh  ← install pinned starship + krew
+        ├── runs /ctx/config.sh    ← systemd units, desktop tweaks, system_files overlay
         └── runs bootc container lint
 ```
 
@@ -42,7 +50,10 @@ Containerfile
 | Path | Purpose |
 |---|---|
 | `Containerfile` | Choose base image; add extra `RUN` directives |
-| `build_files/build.sh` | Install packages via `dnf5`, enable COPRs, configure systemd units |
+| `build_files/repos.sh` | Enable COPRs and external repos (RPMFusion, Kubernetes, etc.) |
+| `build_files/packages.sh` | All `dnf5` installs in one transaction; disables COPRs at the end |
+| `build_files/binaries.sh` | Download and install pinned starship and krew |
+| `build_files/config.sh` | Enable systemd units, hide desktop entries, overlay system_files/ |
 | `system_files/` | Files overlaid onto `/` inside the image at build time (currently empty) |
 | `image-template.env` | Image name, org, tags, BIB image — read by the Justfile |
 | `disk_config/disk.toml` | Filesystem layout for QCOW2/RAW disk images |
