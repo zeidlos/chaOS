@@ -9,6 +9,7 @@ PACKAGES=(
   just
   golang
   neovim
+  yazi
 
   # Utilities not bundled in the COSMIC Atomic base
   NetworkManager-openvpn
