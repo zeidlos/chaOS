@@ -29,6 +29,7 @@ jobs:
       contents: read
       packages: write
       id-token: write
+      security-events: write
 
     steps:
       # These stage versions are pinned by https://github.com/renovatebot/renovate
@@ -91,6 +92,26 @@ jobs:
       #    sudo -E $(command -v just) rechunk \
       #      ${IMAGE_NAME} \
       #      ${DEFAULT_TAG}
+
+      - name: Save image for CVE scan
+        run: |
+          sudo podman save --format oci-archive -o /tmp/image-scan.tar "${IMAGE_NAME}:${DEFAULT_TAG}"
+
+      - name: Scan image for CVEs
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          input: /tmp/image-scan.tar
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+      - name: Upload CVE scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@dd903d2e4f5405488e5ef1422510ee31c8b32357 # v3.36.2
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
 
       - name: Generate Build Tags
         id: gen-build-tags
