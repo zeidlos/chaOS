@@ -95,7 +95,7 @@ jobs:
 
       - name: Save image for CVE scan
         run: |
-          sudo podman save --format oci-archive -o /tmp/image-scan.tar "${IMAGE_NAME}:${DEFAULT_TAG}"
+          sudo podman save --format docker -o /tmp/image-scan.tar "${IMAGE_NAME}:${DEFAULT_TAG}"
 
       - name: Scan image for CVEs
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
