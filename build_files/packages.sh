@@ -143,7 +143,9 @@ PACKAGES=(
   cliphist
   swww
   nwg-look
-  qt6ct
+  # qt6ct excluded — Fedora 44 rebuilt it for Qt 6.11 but solopasha's
+  # hyprland-qt-support (pulled by hyprpolkitagent) still needs Qt 6.10 private API.
+  # Re-add once the COPR rebuilds against Qt 6.11.
   foot
   brightnessctl
   pamixer
